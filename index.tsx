@@ -25,21 +25,29 @@ const WORD_LIST = [
   'azure', 'blue', 'green', 'indigo', 'ivory', 'jade', 'khaki', 'lilac'
 ];
 
+// --- TYPE DEFINITIONS ---
+interface HistoryItem {
+    id: number;
+    value: string;
+    type: string;
+    timestamp: string;
+}
+
 // --- UTILITY FUNCTIONS ---
 
 // Cryptographically secure random number generation
-const secureRandom = (count) => {
+const secureRandom = (count: number): number[] => {
   const values = new Uint32Array(count);
   crypto.getRandomValues(values);
   return Array.from(values);
 };
 
-const secureRandomNumber = (max) => {
+const secureRandomNumber = (max: number): number => {
   const randomValues = secureRandom(1);
   return randomValues[0] % max;
 };
 
-const shuffleArray = (array) => {
+function shuffleArray<T>(array: T[]): T[] {
   const newArray = [...array];
   for (let i = newArray.length - 1; i > 0; i--) {
     const j = secureRandomNumber(i + 1);
@@ -48,7 +56,7 @@ const shuffleArray = (array) => {
   return newArray;
 };
 
-const timeAgo = (date) => {
+const timeAgo = (date: Date): string => {
   const seconds = Math.floor((new Date().getTime() - date.getTime()) / 1000);
   let interval = seconds / 31536000;
   if (interval > 1) return Math.floor(interval) + " years ago";
@@ -64,14 +72,19 @@ const timeAgo = (date) => {
   return Math.floor(seconds) + " seconds ago";
 };
 
-
 // --- UI COMPONENTS ---
 
-const Icon = ({ path, className = "w-6 h-6" }) => (
-  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" className={className}>
-    <path d={path} />
-  </svg>
-);
+interface IconProps {
+  path: string;
+  className?: string;
+}
+function Icon({ path, className = "w-6 h-6" }: IconProps) {
+    return (
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" className={className}>
+            <path d={path} />
+        </svg>
+    );
+}
 
 const CopyIcon = () => <Icon path="M16 1H4c-1.1 0-2 .9-2 2v14h2V3h12V1zm3 4H8c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h11c1.1 0 2-.9 2-2V7c0-1.1-.9-2-2-2zm0 16H8V7h11v14z" />;
 const CheckIcon = () => <Icon path="M9,16.17L4.83,12l-1.42,1.41L9,19,21,7l-1.41-1.41z" />;
@@ -80,46 +93,76 @@ const TrashIcon = () => <Icon path="M6,19c0,1.1,.9,2,2,2h8c1.1,0,2-.9,2-2V7H6v12
 const EyeOpenIcon = () => <Icon path="M12,4.5C7,4.5,2.73,7.61,1,12c1.73,4.39,6,7.5,11,7.5s9.27-3.11,11-7.5C21.27,7.61,17,4.5,12,4.5zM12,17c-2.76,0-5-2.24-5-5s2.24-5,5-5,5,2.24,5,5-2.24,5-5,5zm0-8c-1.66,0-3,1.34-3,3s1.34,3,3,3,3-1.34,3-3-1.34-3-3-3z" />;
 const EyeClosedIcon = () => <Icon path="M12,7c2.76,0,5,2.24,5,5,0,.65-.13,1.26-.36,1.83l2.92,2.92c1.51-1.26,2.7-2.89,3.43-4.75-1.73-4.39-6-7.5-11-7.5-1.4,0-2.74,.25-3.98,.7l2.16,2.16C10.74,7.13,11.35,7,12,7zM2,4.27l2.28,2.28,4.52,4.52L2,4.27zM2,4.27l2.28,2.28.46.46A11.804,11.804,0,0,0,1,12c1.73,4.39,6,7.5,11,7.5,1.55,0,3.03-.3,4.38-.84l.42,.42L19.73,22,21,20.73,3.27,3,2,4.27zM7.53,9.8l1.55,1.55c-.05,.21-.08,.43-.08,.65,0,1.66,1.34,3,3,3,.22,0,.44-.03,.65-.08l1.55,1.55c-.67,.33-1.41,.53-2.2,.53-2.76,0-5-2.24-5-5,0-.79,.2-1.53,.53-2.2z" />;
 
-const Tooltip = ({ text, children }) => (
-  <div className="relative flex items-center group">
-    {children}
-    <div className="absolute left-1/2 -translate-x-1/2 bottom-full mb-2 w-max px-2 py-1 bg-gray-700 text-white text-xs rounded-md opacity-0 group-hover:opacity-100 transition-opacity duration-300 pointer-events-none z-10">
-      {text}
-    </div>
-  </div>
-);
+interface TooltipProps {
+  text: string;
+  children: React.ReactNode;
+}
+function Tooltip({ text, children }: TooltipProps) {
+    return (
+        <div className="relative flex items-center group">
+            {children}
+            <div className="absolute left-1/2 -translate-x-1/2 bottom-full mb-2 w-max px-2 py-1 bg-gray-700 text-white text-xs rounded-md opacity-0 group-hover:opacity-100 transition-opacity duration-300 pointer-events-none z-10">
+                {text}
+            </div>
+        </div>
+    );
+}
 
-const Slider = ({ label, value, min, max, onChange, unit = "" }) => (
-  <div className="space-y-2">
-    <label className="flex justify-between text-sm font-medium text-gray-300">
-      <span>{label}</span>
-      <span className="text-indigo-400 font-semibold">{value} {unit}</span>
-    </label>
-    <input
-      type="range"
-      min={min}
-      max={max}
-      value={value}
-      onChange={onChange}
-      className="w-full h-2 bg-gray-700 rounded-lg appearance-none cursor-pointer range-lg accent-indigo-500"
-    />
-  </div>
-);
+interface SliderProps {
+  label: string;
+  value: number;
+  min: number;
+  max: number;
+  onChange: (e: React.ChangeEvent<HTMLInputElement>) => void;
+  unit?: string;
+}
+function Slider({ label, value, min, max, onChange, unit = "" }: SliderProps) {
+    return (
+        <div className="space-y-2">
+            <label className="flex justify-between text-sm font-medium text-gray-300">
+                <span>{label}</span>
+                <span className="text-indigo-400 font-semibold">{value} {unit}</span>
+            </label>
+            <input
+                type="range"
+                min={min}
+                max={max}
+                value={value}
+                onChange={onChange}
+                className="w-full h-2 bg-gray-700 rounded-lg appearance-none cursor-pointer range-lg accent-indigo-500"
+            />
+        </div>
+    );
+}
 
-const Checkbox = ({ label, checked, onChange, tooltipText }) => (
-  <label className="flex items-center space-x-3 cursor-pointer select-none">
-    <div className="relative">
-      <input type="checkbox" checked={checked} onChange={onChange} className="sr-only" />
-      <div className={`box block w-10 h-6 rounded-full transition-colors ${checked ? 'bg-indigo-500' : 'bg-gray-600'}`}></div>
-      <div className={`dot absolute left-1 top-1 bg-white w-4 h-4 rounded-full transition-transform ${checked ? 'translate-x-4' : ''}`}></div>
-    </div>
-    <Tooltip text={tooltipText}>
-      <span className="text-sm font-medium text-gray-300">{label}</span>
-    </Tooltip>
-  </label>
-);
+interface CheckboxProps {
+  label: string;
+  checked: boolean;
+  onChange: () => void;
+  tooltipText: string;
+}
+function Checkbox({ label, checked, onChange, tooltipText }: CheckboxProps) {
+    return (
+        <label className="flex items-center space-x-3 cursor-pointer select-none">
+            <div className="relative">
+                <input type="checkbox" checked={checked} onChange={onChange} className="sr-only" />
+                <div className={`box block w-10 h-6 rounded-full transition-colors ${checked ? 'bg-indigo-500' : 'bg-gray-600'}`}></div>
+                <div className={`dot absolute left-1 top-1 bg-white w-4 h-4 rounded-full transition-transform ${checked ? 'translate-x-4' : ''}`}></div>
+            </div>
+            <Tooltip text={tooltipText}>
+                <span className="text-sm font-medium text-gray-300">{label}</span>
+            </Tooltip>
+        </label>
+    );
+}
 
-const Button = ({ onClick, children, className = '', variant = 'primary' }) => {
+interface ButtonProps {
+  onClick: () => void;
+  children: React.ReactNode;
+  className?: string;
+  variant?: 'primary' | 'secondary' | 'ghost';
+}
+function Button({ onClick, children, className = '', variant = 'primary' }: ButtonProps) {
   const baseClasses = "px-4 py-2 rounded-lg font-semibold transition-all duration-200 ease-in-out focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-offset-gray-900 flex items-center justify-center space-x-2";
   const variants = {
     primary: 'bg-indigo-600 text-white hover:bg-indigo-500 focus:ring-indigo-500',
@@ -138,7 +181,13 @@ const Button = ({ onClick, children, className = '', variant = 'primary' }) => {
   );
 };
 
-const GeneratedOutput = ({ value, onRegenerate, onCopy, type }) => {
+interface GeneratedOutputProps {
+  value: string;
+  onRegenerate: () => void;
+  onCopy: (value: string) => void;
+  type: 'Password' | 'PIN' | 'Passphrase';
+}
+function GeneratedOutput({ value, onRegenerate, onCopy, type }: GeneratedOutputProps) {
   const [copied, setCopied] = useState(false);
   const [show, setShow] = useState(type !== 'Password');
 
@@ -185,10 +234,14 @@ const GeneratedOutput = ({ value, onRegenerate, onCopy, type }) => {
   );
 };
 
-
 // --- GENERATOR LOGIC & COMPONENTS ---
 
-const PasswordGenerator = ({ onGenerate, onCopy }) => {
+interface GeneratorProps {
+  onGenerate: (value: string, type: 'Password' | 'PIN' | 'Passphrase') => void;
+  onCopy: (value: string) => void;
+}
+
+function PasswordGenerator({ onGenerate, onCopy }: GeneratorProps) {
   const [length, setLength] = useState(16);
   const [options, setOptions] = useState({
     lowercase: true,
@@ -238,10 +291,9 @@ const PasswordGenerator = ({ onGenerate, onCopy }) => {
       return;
     }
     
-    let pass = [];
+    let pass: string[] = [];
     let tempPool = [...characterPool];
     
-    // "Must Include" logic
     if (options.mustInclude) {
       const requiredChars = [];
       if (options.lowercase) requiredChars.push(LOWERCASE.split('').filter(c => tempPool.includes(c)));
@@ -256,7 +308,6 @@ const PasswordGenerator = ({ onGenerate, onCopy }) => {
       }
     }
 
-    // Fill the rest of the password
     const remainingLength = length - pass.length;
     for (let i = 0; i < remainingLength; i++) {
         if (options.noRepeats) {
@@ -272,7 +323,6 @@ const PasswordGenerator = ({ onGenerate, onCopy }) => {
     
     pass = shuffleArray(pass);
     
-    // "Starts With Letter" logic
     if (options.startsWithLetter && pass.length > 0) {
       const letters = (LOWERCASE + UPPERCASE).split('');
       if (!letters.includes(pass[0])) {
@@ -292,17 +342,17 @@ const PasswordGenerator = ({ onGenerate, onCopy }) => {
 
     onGenerate(finalPassword, 'Password');
 
-  }, [length, options, characterPool, onGenerate]);
+  }, [length, options, characterPool, onGenerate, excludeCustom]);
 
   useEffect(() => {
     generate();
   }, [generate]);
 
-  const handleOptionChange = (key) => {
+  const handleOptionChange = (key: keyof typeof options) => {
     setOptions(prev => ({ ...prev, [key]: !prev[key] }));
   };
   
-  const setPreset = (preset) => {
+  const setPreset = (preset: 'balanced' | 'strong' | 'paranoid') => {
     switch (preset) {
         case 'balanced':
             setLength(16);
@@ -336,7 +386,7 @@ const PasswordGenerator = ({ onGenerate, onCopy }) => {
         <div>
           <div className="flex justify-between items-center mb-2">
             <h3 className="text-sm font-medium text-gray-300">Strength ({entropy} bits)</h3>
-            <span className={`text-sm font-semibold ${strength.label.toLowerCase().replace(' ','-')}`}>{strength.label}</span>
+            <span className={`text-sm font-semibold`}>{strength.label}</span>
           </div>
           <div className="w-full bg-gray-700 rounded-full h-2.5">
             <motion.div
@@ -382,7 +432,7 @@ const PasswordGenerator = ({ onGenerate, onCopy }) => {
   );
 };
 
-const PinGenerator = ({ onGenerate, onCopy }) => {
+function PinGenerator({ onGenerate, onCopy }: GeneratorProps) {
   const [length, setLength] = useState(4);
   const [pin, setPin] = useState('');
 
@@ -409,7 +459,7 @@ const PinGenerator = ({ onGenerate, onCopy }) => {
   );
 };
 
-const PassphraseGenerator = ({ onGenerate, onCopy }) => {
+function PassphraseGenerator({ onGenerate, onCopy }: GeneratorProps) {
   const [words, setWords] = useState(4);
   const [separator, setSeparator] = useState('-');
   const [options, setOptions] = useState({
@@ -420,7 +470,7 @@ const PassphraseGenerator = ({ onGenerate, onCopy }) => {
   const [passphrase, setPassphrase] = useState('');
 
   const generate = useCallback(() => {
-    let phrase = [];
+    let phrase: string[] = [];
     const shuffledWords = shuffleArray(WORD_LIST);
     for (let i = 0; i < words; i++) {
       phrase.push(shuffledWords[i % shuffledWords.length]);
@@ -447,7 +497,7 @@ const PassphraseGenerator = ({ onGenerate, onCopy }) => {
     generate();
   }, [generate]);
   
-  const handleOptionChange = (key) => {
+  const handleOptionChange = (key: keyof typeof options) => {
     setOptions(prev => ({ ...prev, [key]: !prev[key] }));
   };
 
@@ -475,7 +525,12 @@ const PassphraseGenerator = ({ onGenerate, onCopy }) => {
   );
 };
 
-const History = ({ history, onClear, onCopy }) => {
+interface HistoryListProps {
+    history: HistoryItem[];
+    onClear: () => void;
+    onCopy: (value: string) => void;
+}
+function HistoryList({ history, onClear, onCopy }: HistoryListProps) {
     const [currentTime, setCurrentTime] = useState(new Date());
 
     useEffect(() => {
@@ -483,7 +538,7 @@ const History = ({ history, onClear, onCopy }) => {
         return () => clearInterval(timer);
     }, []);
 
-    const copyFromHistory = (value) => {
+    const copyFromHistory = (value: string) => {
         navigator.clipboard.writeText(value);
         onCopy(value);
     };
@@ -536,9 +591,9 @@ const History = ({ history, onClear, onCopy }) => {
 
 // --- MAIN APP COMPONENT ---
 
-const App = () => {
+function App() {
   const [activeTab, setActiveTab] = useState('Password');
-  const [history, setHistory] = useState([]);
+  const [history, setHistory] = useState<HistoryItem[]>([]);
   const [copiedNotification, setCopiedNotification] = useState('');
 
   useEffect(() => {
@@ -560,9 +615,9 @@ const App = () => {
     }
   }, [history]);
 
-  const addToHistory = useCallback((value, type) => {
+  const addToHistory = useCallback((value: string, type: string) => {
     setHistory(prev => {
-      const newItem = { id: Date.now(), value, type, timestamp: new Date().toISOString() };
+      const newItem: HistoryItem = { id: Date.now(), value, type, timestamp: new Date().toISOString() };
       const newHistory = [newItem, ...prev];
       return newHistory.slice(0, 50); // Keep only last 50
     });
@@ -572,7 +627,7 @@ const App = () => {
     setHistory([]);
   };
 
-  const showCopiedNotification = (value) => {
+  const showCopiedNotification = (value: string) => {
     setCopiedNotification(value);
     setTimeout(() => setCopiedNotification(''), 2000);
   };
@@ -595,6 +650,12 @@ const App = () => {
             </div>
             <p className="text-gray-400">Generate secure, random passwords, PINs, and passphrases offline.</p>
         </header>
+
+        <div className="my-6 flex justify-center px-4">
+          <a href="https://beta.publishers.adsterra.com/referral/1Pi3iNMPeg" rel="nofollow" target="_blank">
+            <img alt="Ad banner" src="https://landings-cdn.adsterratech.com/referralBanners/gif/700x90_adsterra_reff.gif" className="max-w-full h-auto rounded-lg shadow-md" />
+          </a>
+        </div>
 
         <main className="bg-gray-800/30 backdrop-blur-xl border border-gray-700 rounded-2xl p-4 sm:p-6 shadow-2xl shadow-black/30">
           <div className="mb-6">
@@ -627,15 +688,20 @@ const App = () => {
               exit={{ y: -10, opacity: 0 }}
               transition={{ duration: 0.2 }}
             >
-              {activeTab === 'Password' && <PasswordGenerator onGenerate={addToHistory} onCopy={showCopiedNotification} />}
-              {activeTab === 'PIN' && <PinGenerator onGenerate={addToHistory} onCopy={showCopiedNotification} />}
-              {activeTab === 'Passphrase' && <PassphraseGenerator onGenerate={addToHistory} onCopy={showCopiedNotification} />}
+              {activeTab === 'Password' && <PasswordGenerator onGenerate={addToHistory as GeneratorProps['onGenerate']} onCopy={showCopiedNotification} />}
+              {activeTab === 'PIN' && <PinGenerator onGenerate={addToHistory as GeneratorProps['onGenerate']} onCopy={showCopiedNotification} />}
+              {activeTab === 'Passphrase' && <PassphraseGenerator onGenerate={addToHistory as GeneratorProps['onGenerate']} onCopy={showCopiedNotification} />}
             </motion.div>
           </AnimatePresence>
-          <History history={history} onClear={clearHistory} onCopy={showCopiedNotification} />
+          <HistoryList history={history} onClear={clearHistory} onCopy={showCopiedNotification} />
         </main>
         
         <footer className="text-center mt-8 text-sm text-gray-500">
+            <div className="mb-6 flex justify-center px-4">
+              <a href="https://beta.publishers.adsterra.com/referral/1Pi3iNMPeg" rel="nofollow" target="_blank">
+                <img alt="Ad banner" src="https://landings-cdn.adsterratech.com/referralBanners/png/600%20x%20250%20px.png" className="max-w-full h-auto rounded-lg shadow-md" />
+              </a>
+            </div>
             <p>Built for privacy and security. Your data never leaves your device.</p>
         </footer>
 
@@ -657,5 +723,8 @@ const App = () => {
   );
 };
 
-const root = ReactDOM.createRoot(document.getElementById('root'));
-root.render(<App />);
+const rootElement = document.getElementById('root');
+if (rootElement) {
+  const root = ReactDOM.createRoot(rootElement);
+  root.render(<App />);
+}
